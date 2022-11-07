@@ -1,10 +1,10 @@
 {
   "name": "messagely",
   "version": "1.1.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest -i"
+    "test": "jest -i",
+    "start": "node server.js"
   },
   "author": "",
   "license": "ISC",
@@ -18,5 +18,15 @@
     "jsonwebtoken": "*",
     "pg": "*",
     "supertest": "*"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cli3338198/express-messagely.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/cli3338198/express-messagely/issues"
+  },
+  "homepage": "https://github.com/cli3338198/express-messagely#readme",
+  "description": ""
 }
