@@ -30,7 +30,7 @@ class User {
   /** Authenticate: is username/password valid? Returns boolean. */
 
   static async authenticate(username, password) {
-    const result = db.query(
+    const result = await db.query(
       `
       SELECT u.username, u.password
       FROM users AS u
@@ -54,12 +54,35 @@ class User {
 
   /** Update last_login_at for user */
 
-  static async updateLoginTimestamp(username) {}
+  static async updateLoginTimestamp(username) {
+    const result = await db.query(
+      `
+      UPDATE users
+      SET last_login_at = $1
+      WHERE username = $2
+      RETURNING username
+      `,
+      [Date.now(), username]
+    )
+
+    const user = result.rows[0];
+
+    if(!user) throw new NotFoundError("User does not exist.");
+  }
 
   /** All: basic info on all users:
    * [{username, first_name, last_name}, ...] */
 
-  static async all() {}
+  static async all() {
+    const result = await db.query(
+      `
+      SELECT username, first_name, last_name
+      FROM users
+      `
+    )
+
+    return result.rows;
+  }
 
   /** Get: get user by username
    *
@@ -70,7 +93,28 @@ class User {
    *          join_at,
    *          last_login_at } */
 
-  static async get(username) {}
+  static async get(username) {
+    const result = await db.query(
+      `
+      SELECT
+        username,
+        first_name,
+        last_name,
+        phone,
+        join_at,
+        last_login_at
+      FROM users
+      WHERE username = $1
+      `,
+      [username]
+    );
+
+    const user = result.rows[0];
+
+    if(!user) throw new NotFoundError("User does not exist.");
+
+    return user
+  }
 
   /** Return messages from this user.
    *
@@ -80,7 +124,38 @@ class User {
    *   {username, first_name, last_name, phone}
    */
 
-  static async messagesFrom(username) {}
+  static async messagesFrom(username) {
+    const result = await db.query(
+      `
+      SELECT
+        m.id,
+        m.to_username,
+        m.body,
+        m.sent_at,
+        m.read_at,
+        u.first_name,
+        u.last_name,
+        u.phone
+      FROM messages AS m
+        JOIN users AS u ON m.to_username = u.username
+      WHERE m.from_username = $1
+      `,
+      [username]
+    );
+
+    return result.rows.map(m => ({
+      id: m.id,
+      to_user: {
+        username: m.to_username,
+        first_name: m.to_first_name,
+        last_name: m.to_last_name,
+        phone: m.to_phone,
+      },
+      body: m.body,
+      sent_at: m.sent_at,
+      read_at: m.read_at,
+    }));
+  }
 
   /** Return messages to this user.
    *
