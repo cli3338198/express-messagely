@@ -4,6 +4,8 @@ const db = require("../db");
 const bcrypt = require("bcrypt");
 const { BCRYPT_WORK_FACTOR } = require("../config");
 
+const { NotFoundError, UnauthorizedError } = require("../expressError");
+
 /** User of the site. */
 
 class User {
@@ -17,11 +19,19 @@ class User {
     const result = await db.query(
       `
       INSERT INTO users
-      (username, password, first_name, last_name, phone)
-      VALUES($1, $2, $3, $3, $5)
+      (username, password, first_name, last_name, phone, join_at, last_login_at)
+      VALUES($1, $2, $3, $4, $5, $6, $7)
       RETURNING username, password, first_name, last_name, phone
     `,
-      [username, hashedPassword, first_name, last_name, phone]
+      [
+        username,
+        hashedPassword,
+        first_name,
+        last_name,
+        phone,
+        new Date(),
+        new Date(),
+      ]
     );
 
     return result.rows[0];
@@ -32,24 +42,15 @@ class User {
   static async authenticate(username, password) {
     const result = await db.query(
       `
-      SELECT u.username, u.password
-      FROM users AS u
-      WHERE u.username = $1
-      RETURNING u.password
+      SELECT password
+      FROM users
+      WHERE username = $1
     `,
       [username]
     );
     const user = result.rows[0];
 
-    if (user) {
-      if ((await bcrypt.compare(password, user.password)) === true) {
-        return true;
-      } else {
-        throw new UnauthorizedError("Invalid password.");
-      }
-    }
-
-    throw new NotFoundError("User does not exist.");
+    return user && (await bcrypt.compare(password, user.password)) === true;
   }
 
   /** Update last_login_at for user */
@@ -62,12 +63,12 @@ class User {
       WHERE username = $2
       RETURNING username
       `,
-      [Date.now(), username]
-    )
+      [new Date(), username]
+    );
 
     const user = result.rows[0];
 
-    if(!user) throw new NotFoundError("User does not exist.");
+    if (!user) throw new NotFoundError("User does not exist.");
   }
 
   /** All: basic info on all users:
@@ -79,7 +80,7 @@ class User {
       SELECT username, first_name, last_name
       FROM users
       `
-    )
+    );
 
     return result.rows;
   }
@@ -111,9 +112,9 @@ class User {
 
     const user = result.rows[0];
 
-    if(!user) throw new NotFoundError("User does not exist.");
+    if (!user) throw new NotFoundError("User does not exist.");
 
-    return user
+    return user;
   }
 
   /** Return messages from this user.
@@ -143,13 +144,13 @@ class User {
       [username]
     );
 
-    return result.rows.map(m => ({
+    return result.rows.map((m) => ({
       id: m.id,
       to_user: {
         username: m.to_username,
-        first_name: m.to_first_name,
-        last_name: m.to_last_name,
-        phone: m.to_phone,
+        first_name: m.first_name,
+        last_name: m.last_name,
+        phone: m.phone,
       },
       body: m.body,
       sent_at: m.sent_at,
@@ -165,7 +166,38 @@ class User {
    *   {username, first_name, last_name, phone}
    */
 
-  static async messagesTo(username) {}
+  static async messagesTo(username) {
+    const result = await db.query(
+      `
+      SELECT
+        m.id,
+        m.from_username,
+        m.body,
+        m.sent_at,
+        m.read_at,
+        u.first_name,
+        u.last_name,
+        u.phone
+      FROM messages AS m
+        JOIN users AS u ON m.from_username = u.username
+      WHERE m.to_username = $1
+      `,
+      [username]
+    );
+
+    return result.rows.map((m) => ({
+      id: m.id,
+      from_user: {
+        username: m.from_username,
+        first_name: m.first_name,
+        last_name: m.last_name,
+        phone: m.phone,
+      },
+      body: m.body,
+      sent_at: m.sent_at,
+      read_at: m.read_at,
+    }));
+  }
 }
 
 module.exports = User;
