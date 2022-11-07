@@ -20,7 +20,7 @@ class User {
       `
       INSERT INTO users
       (username, password, first_name, last_name, phone, join_at, last_login_at)
-      VALUES($1, $2, $3, $4, $5, $6, $7)
+      VALUES($1, $2, $3, $4, $5, current_timestamp, current_timestamp)
       RETURNING username, password, first_name, last_name, phone
     `,
       [
@@ -29,8 +29,6 @@ class User {
         first_name,
         last_name,
         phone,
-        new Date(),
-        new Date(),
       ]
     );
 
@@ -59,11 +57,11 @@ class User {
     const result = await db.query(
       `
       UPDATE users
-      SET last_login_at = $1
-      WHERE username = $2
+      SET last_login_at = current_timestamp
+      WHERE username = $1
       RETURNING username
       `,
-      [new Date(), username]
+      [username]
     );
 
     const user = result.rows[0];
@@ -79,6 +77,7 @@ class User {
       `
       SELECT username, first_name, last_name
       FROM users
+      ORDER BY username
       `
     );
 
