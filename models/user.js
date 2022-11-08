@@ -13,7 +13,7 @@ class User {
    *    {username, password, first_name, last_name, phone}
    */
 
-  static async register({ username, password, first_name, last_name, phone }) {
+  static async register({ username = "user", password = "pass", first_name = "John", last_name = "Smith", phone = 1234567890}) {
     const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
 
     const result = await db.query(

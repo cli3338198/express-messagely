@@ -30,7 +30,8 @@ router.post("/register", async function (req, res) {
   if (req.body === undefined) throw new BadRequestError();
   try {
     const user = await User.register(req.body);
-    return user && jwt.sign({ username: user.username }, SECRET_KEY);
+    const token = jwt.sign({ username: user.username }, SECRET_KEY);
+    return res.json({ token });
   } catch (err) {
     throw err;
   }
