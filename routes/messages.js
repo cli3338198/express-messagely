@@ -21,11 +21,11 @@ const Message = require("../models/message");
 router.get("/:id", async function (req, res) {
   const message = await Message.get(req.params.id);
 
-  if(
+  if (
     res.locals.user &&
     message &&
     (message.from_user.username === res.locals.user.username ||
-    message.to_user.username === res.locals.user.username)
+      message.to_user.username === res.locals.user.username)
   ) {
     return res.json({ message });
   }
@@ -42,7 +42,10 @@ router.get("/:id", async function (req, res) {
 router.post("/", ensureLoggedIn, async function (req, res) {
   if (req.body === undefined) throw new BadRequestError();
 
-  const message = await Message.create(req.body);
+  const message = await Message.create({
+    ...req.body,
+    from_username: res.locals.user.username,
+  });
 
   return res.json({ message });
 });
@@ -59,11 +62,11 @@ router.post("/:id/read", async function (req, res) {
 
   const foundMessage = await Message.get(req.params.id);
 
-  if(
+  if (
     res.locals.user &&
     foundMessage &&
     foundMessage.to_user.username === res.locals.user.username
-    ) {
+  ) {
     const message = await Message.markRead(req.params.id);
     return res.json({ message });
   }

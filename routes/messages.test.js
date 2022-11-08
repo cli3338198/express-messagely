@@ -36,46 +36,90 @@ describe("Message Routes Test", function () {
       phone: "+14155550001",
     });
 
-    m1 = await Message.create(
-      {from_username: u1.username,
-        to_username: u2.username,
-        body: "Hello"}
-    );
+    m1 = await Message.create({
+      from_username: u1.username,
+      to_username: u2.username,
+      body: "Hello",
+    });
 
-    m2 = await Message.create(
-      {from_username: u2.username,
-        to_username: u1.username,
-        body: "Yo"}
-    );
+    m2 = await Message.create({
+      from_username: u2.username,
+      to_username: u1.username,
+      body: "Yo",
+    });
 
     token = jwt.sign({ username: u1.username }, SECRET_KEY);
   });
-
 
   /** GET /messages/:id => message */
 
   describe("GET /messages/:id", function () {
     test("can get message", async function () {
       const resp = await request(app)
-      .get(`/messages/${m1.id}`)
-      .query({_token : token});
+        .get(`/messages/${m1.id}`)
+        .query({ _token: token });
 
       expect(resp.statusCode).toEqual(200);
       expect(resp.body.message.body).toEqual("Hello");
-    })
+    });
 
     test("won't get message if not authenticated", async function () {
-      const resp = await request(app).get(`/messages/${m1.id}`)
+      const resp = await request(app).get(`/messages/${m1.id}`);
 
       expect(resp.statusCode).toEqual(401);
-    })
+    });
 
     test("won't get message with forged token", async function () {
       const resp = await request(app)
-      .get(`/messages/${m1.id}`)
-      .query({_token : "FAKE"});
+        .get(`/messages/${m1.id}`)
+        .query({ _token: "FAKE" });
 
       expect(resp.statusCode).toEqual(401);
-    })
-  })
-})
+    });
+  });
+
+  describe("POST /messages", function () {
+    test("Can post message", async function () {
+      const resp = await request(app).post("/messages").send({
+        to_username: u2.username,
+        body: "TEST POST",
+        from_username: u1.username,
+        _token: token,
+      });
+
+      expect(resp.statusCode).toEqual(200);
+      expect(resp.body.message).toEqual({
+        id: expect.any(Number),
+        from_username: u1.username,
+        to_username: u2.username,
+        body: "TEST POST",
+        sent_at: expect.any(String),
+      });
+    });
+
+    test("Won't post message if no/bad token/no body", async function () {
+      const resp1 = await request(app).post("/messages").send({
+        to_username: u2.username,
+        body: "TEST POST",
+        from_username: u1.username,
+      });
+
+      expect(resp1.statusCode).toEqual(401);
+
+      const resp2 = await request(app).post("/messages").send({
+        to_username: u2.username,
+        body: "TEST POST",
+        from_username: u1.username,
+        _token: "BAD TOKEN",
+      });
+
+      expect(resp2.statusCode).toEqual(401);
+
+      const resp3 = await request(app).post("/messages").query({
+        _token: token,
+      });
+
+      expect(resp3.statusCode).toEqual(400);
+    });
+  });
+});
