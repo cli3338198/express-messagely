@@ -51,8 +51,6 @@ describe("Message Routes Test", function () {
     token = jwt.sign({ username: u1.username }, SECRET_KEY);
   });
 
-  /** GET /messages/:id => message */
-
   describe("GET /messages/:id", function () {
     test("can get message", async function () {
       const resp = await request(app)

@@ -94,7 +94,7 @@ describe("Users Routes Test", function () {
     });
   });
 
-  describe("GET /:username/to", function () {
+  describe("GET /users/:username/to", function () {
     test("Get messages to a user", async function () {
       const resp = await request(app)
         .get(`/users/${u1.username}/to`)
@@ -118,5 +118,31 @@ describe("Users Routes Test", function () {
 
       expect(resp.statusCode).toEqual(401);
     });
+  });
+
+  describe("GET /users/:username/from", function () {
+    test("Get messages from a user", async function () {
+      const resp = await request(app)
+        .get(`/users/${u1.username}/from`)
+        .send({ _token });
+
+      expect(resp.statusCode).toEqual(200);
+      expect(resp.body.messages.length).toEqual(1);
+      expect(resp.body.messages[0].body).toEqual("Hello");
+    })
+
+    test("Won't get messages from user if not correct user", async function () {
+      const resp = await request(app)
+        .get(`/users/${u1.username}/from`)
+        .send({ _token: _badToken });
+
+      expect(resp.statusCode).toEqual(401);
+    });
+
+    test("Won't get messages from user if not logged in", async function () {
+      const resp = await request(app).get(`/users/${u1.username}/from`);
+
+      expect(resp.statusCode).toEqual(401);
+    })
   });
 });
