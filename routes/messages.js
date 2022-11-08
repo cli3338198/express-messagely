@@ -47,7 +47,7 @@ router.post("/", ensureLoggedIn, async function (req, res) {
     from_username: res.locals.user.username,
   });
 
-  return res.json({ message });
+  return res.status(201).json({ message });
 });
 
 /** POST/:id/read - mark message as read:

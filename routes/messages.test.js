@@ -87,7 +87,7 @@ describe("Message Routes Test", function () {
         _token: token,
       });
 
-      expect(resp.statusCode).toEqual(200);
+      expect(resp.statusCode).toEqual(201);
       expect(resp.body.message).toEqual({
         id: expect.any(Number),
         from_username: u1.username,
