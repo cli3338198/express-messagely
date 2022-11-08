@@ -122,4 +122,27 @@ describe("Message Routes Test", function () {
       expect(resp3.statusCode).toEqual(400);
     });
   });
+
+  describe("POST /messages/:id/read", function () {
+    test("Can mark message as read", async function () {
+      const resp = await request(app)
+        .post(`/messages/${m2.id}/read`)
+        .query({
+          _token: token,
+        });
+
+      expect(resp.statusCode).toEqual(200);
+      expect(resp.body.message.read_at).toEqual(expect.any(String));
+    });
+
+    test("Won't read message if sender views message", async function () {
+      const resp = await request(app)
+        .post(`/messages/${m1.id}/read`)
+        .query({
+          _token: token,
+        });
+
+        expect(resp.statusCode).toEqual(401);
+    })
+  });
 });

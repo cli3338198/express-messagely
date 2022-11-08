@@ -58,8 +58,6 @@ router.post("/", ensureLoggedIn, async function (req, res) {
  *
  **/
 router.post("/:id/read", async function (req, res) {
-  if (req.body === undefined) throw new BadRequestError();
-
   const foundMessage = await Message.get(req.params.id);
 
   if (
