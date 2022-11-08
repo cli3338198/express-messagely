@@ -58,7 +58,7 @@ describe("Message Routes Test", function () {
         .query({ _token: token });
 
       expect(resp.statusCode).toEqual(200);
-      expect(resp.body.message.body).toEqual("Hello");
+      expect(resp.body.message.body).toEqual("Hello"); // TODO: Be more exact
     });
 
     test("won't get message if not authenticated", async function () {
@@ -133,7 +133,7 @@ describe("Message Routes Test", function () {
       expect(resp.body.message.read_at).toEqual(expect.any(String));
     });
 
-    test("Won't read message if sender views message", async function () {
+    test("Won't mark message as read if sender views message", async function () {
       const resp = await request(app)
         .post(`/messages/${m1.id}/read`)
         .query({
@@ -143,4 +143,8 @@ describe("Message Routes Test", function () {
         expect(resp.statusCode).toEqual(401);
     })
   });
+});
+
+afterAll(async function () {
+  await db.end();
 });

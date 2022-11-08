@@ -16,6 +16,7 @@ describe("Users Routes Test", function () {
   let m2;
   let _token;
   let _badToken;
+  //TODO: Rename tokens
 
   beforeEach(async function () {
     await db.query("DELETE FROM messages");
@@ -53,14 +54,13 @@ describe("Users Routes Test", function () {
     _badToken = jwt.sign({ username: u2.username }, SECRET_KEY);
   });
 
-  /** POST /auth/register => token  */
-
   describe("GET /users/", function () {
     test("Get all users", async function () {
       const resp = await request(app).get("/users").query({ _token });
 
       expect(resp.statusCode).toEqual(200);
       expect(resp.body.users.length).toEqual(2);
+      // TODO: expect exact data from users
     });
 
     test("Won't get all users if not logged in", async function () {
@@ -85,6 +85,7 @@ describe("Users Routes Test", function () {
         join_at: expect.any(String),
         last_login_at: expect.any(String),
       });
+      // TODO: What happens if user does not exist
     });
 
     test("Won't get user detail if not logged in", async function () {
@@ -102,13 +103,13 @@ describe("Users Routes Test", function () {
 
       expect(resp.statusCode).toEqual(200);
       expect(resp.body.messages.length).toEqual(1);
-      expect(resp.body.messages[0].body).toEqual("Yo");
+      expect(resp.body.messages[0].body).toEqual("Yo"); // TODO: Be more exact
     });
 
     test(`Won't get messages to user not the recipient`, async function () {
       const resp = await request(app)
         .get(`/users/${u1.username}/to`)
-        .send({ _token: _badToken });
+        .send({ _token: _badToken }); // Wrong auth
 
       expect(resp.statusCode).toEqual(401);
     });
@@ -118,6 +119,8 @@ describe("Users Routes Test", function () {
 
       expect(resp.statusCode).toEqual(401);
     });
+
+    // TODO: User does not exist
   });
 
   describe("GET /users/:username/from", function () {
@@ -128,13 +131,13 @@ describe("Users Routes Test", function () {
 
       expect(resp.statusCode).toEqual(200);
       expect(resp.body.messages.length).toEqual(1);
-      expect(resp.body.messages[0].body).toEqual("Hello");
+      expect(resp.body.messages[0].body).toEqual("Hello"); // TODO: Be more exact
     })
 
     test("Won't get messages from user if not correct user", async function () {
       const resp = await request(app)
         .get(`/users/${u1.username}/from`)
-        .send({ _token: _badToken });
+        .send({ _token: _badToken }); // Wrong auth
 
       expect(resp.statusCode).toEqual(401);
     });
@@ -144,5 +147,11 @@ describe("Users Routes Test", function () {
 
       expect(resp.statusCode).toEqual(401);
     })
+
+    // TODO: User does not exist
   });
+});
+
+afterAll(async function () {
+  await db.end();
 });

@@ -18,6 +18,9 @@ const Message = require("../models/message");
  * Makes sure that the currently-logged-in users is either the to or from user.
  *
  **/
+
+//TODO: Use ensure logged in instead of res.locals.user check
+//TODO: Invert logic to fail fast
 router.get("/:id", async function (req, res) {
   const message = await Message.get(req.params.id);
 

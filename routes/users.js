@@ -57,6 +57,8 @@ router.get("/:username/to", ensureCorrectUser, async function(req, res) {
  *
  **/
 
+//TODO: State that the user must be the correct user in all docstrings
+
 router.get("/:username/from", ensureCorrectUser, async function(req, res) {
   const messages = await User.messagesFrom(req.params.username);
 
