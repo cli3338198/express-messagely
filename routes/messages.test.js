@@ -58,7 +58,24 @@ describe("Message Routes Test", function () {
         .query({ _token: token });
 
       expect(resp.statusCode).toEqual(200);
-      expect(resp.body.message.body).toEqual("Hello"); // TODO: Be more exact
+      expect(resp.body.message).toEqual({
+        id: expect.any(Number),
+        body: "Hello",
+        sent_at: expect.any(String),
+        read_at: null,
+        from_user: {
+          username: u1.username,
+          first_name: u1.first_name,
+          last_name: u1.last_name,
+          phone: u1.phone,
+        },
+        to_user: {
+          username: u2.username,
+          first_name: u2.first_name,
+          last_name: u2.last_name,
+          phone: u2.phone,
+        },
+      });
     });
 
     test("won't get message if not authenticated", async function () {
@@ -73,6 +90,14 @@ describe("Message Routes Test", function () {
         .query({ _token: "FAKE" });
 
       expect(resp.statusCode).toEqual(401);
+    });
+
+    test("Won't get message for non-existing message", async function () {
+      const resp = await request(app)
+        .get(`/messages/123454326`)
+        .query({ _token: token });
+
+      expect(resp.statusCode).toEqual(404);
     });
   });
 
@@ -123,25 +148,29 @@ describe("Message Routes Test", function () {
 
   describe("POST /messages/:id/read", function () {
     test("Can mark message as read", async function () {
-      const resp = await request(app)
-        .post(`/messages/${m2.id}/read`)
-        .query({
-          _token: token,
-        });
+      const resp = await request(app).post(`/messages/${m2.id}/read`).query({
+        _token: token,
+      });
 
       expect(resp.statusCode).toEqual(200);
       expect(resp.body.message.read_at).toEqual(expect.any(String));
     });
 
     test("Won't mark message as read if sender views message", async function () {
-      const resp = await request(app)
-        .post(`/messages/${m1.id}/read`)
-        .query({
-          _token: token,
-        });
+      const resp = await request(app).post(`/messages/${m1.id}/read`).query({
+        _token: token,
+      });
 
-        expect(resp.statusCode).toEqual(401);
-    })
+      expect(resp.statusCode).toEqual(401);
+    });
+
+    test("Won't mark message if message doesn't exist", async function () {
+      const resp = await request(app).post(`/messages/1234436/read`).query({
+        _token: token,
+      });
+
+      expect(resp.statusCode).toEqual(404);
+    });
   });
 });
 
